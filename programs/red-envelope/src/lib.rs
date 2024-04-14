@@ -17,6 +17,9 @@ mod red_envelope {
 
         #[msg("Unauthorized")]
         Unauthorized,
+
+        #[msg("Already claimed")]
+        AlreadyClaimed,
     }
     
     pub fn create_envelope(
@@ -45,6 +48,12 @@ mod red_envelope {
 
     pub fn claim(ctx: Context<Claim>, id: u64) -> Result<()>  {
         let envelope = &mut ctx.accounts.envelope;
+
+        // Check if the user has already claimed from this envelope
+        if envelope.claimed.contains(&ctx.accounts.signer.key()) {
+            return err!(MyError::AlreadyClaimed);
+        }
+
         let time_left = (envelope.creation_time + envelope.time_limit) - Clock::get()?.unix_timestamp;
         if time_left <= 0 {
             return err!(MyError::TimeLimitExpired); // Time limit exceeded
@@ -71,6 +80,9 @@ mod red_envelope {
             .signer
             .to_account_info()
             .try_borrow_mut_lamports()? += claim_amount;
+
+        ctx.accounts.envelope.claimed.push(ctx.accounts.signer.key());
+
         msg!("Envelope Claimed, Amount: {}", claim_amount);
         Ok(())
     }
@@ -138,8 +150,9 @@ pub struct Envelope {
     pub creation_time: i64,
     pub time_limit: i64,
     pub owner: Pubkey,
+    pub claimed: Vec<Pubkey>,
 }
 
 impl Envelope {
-    pub const MAX_SIZE: usize = 8 + 8 + 8 + 32;
+    pub const MAX_SIZE: usize = 8 + 8 + 8 + 32 + (32 * 10); //TODO set storage for 10 clamaied accounts 
 }
