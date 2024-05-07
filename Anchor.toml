@@ -2,14 +2,14 @@
 seeds = false
 skip-lint = false
 
-[programs.localnet]
+[programs.devnet]
 red_envelope = "B5X4hyYojFTWHva1YZcAvSdo1tK9pg3Y8nTabSx5LGpp"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Localnet"
+cluster = "devnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
