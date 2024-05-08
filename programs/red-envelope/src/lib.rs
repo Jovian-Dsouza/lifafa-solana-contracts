@@ -4,7 +4,7 @@ use anchor_lang::solana_program::pubkey::Pubkey;
 use anchor_lang::solana_program::clock::Clock;
 use anchor_lang::solana_program::hash::hash;
 
-declare_id!("B5X4hyYojFTWHva1YZcAvSdo1tK9pg3Y8nTabSx5LGpp");
+declare_id!("4pNnBsmfPeTGKQuU1VkfXGkcAspo8xQTfCffn5RHKNAv");
 
 #[program]
 mod red_envelope {

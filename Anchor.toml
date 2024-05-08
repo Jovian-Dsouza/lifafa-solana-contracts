@@ -3,7 +3,7 @@ seeds = false
 skip-lint = false
 
 [programs.devnet]
-red_envelope = "B5X4hyYojFTWHva1YZcAvSdo1tK9pg3Y8nTabSx5LGpp"
+red_envelope = "4pNnBsmfPeTGKQuU1VkfXGkcAspo8xQTfCffn5RHKNAv"
 
 [registry]
 url = "https://api.apr.dev"
