@@ -4,7 +4,7 @@ use anchor_lang::solana_program::pubkey::Pubkey;
 use anchor_lang::solana_program::clock::Clock;
 use anchor_lang::solana_program::hash::hash;
 
-declare_id!("4pNnBsmfPeTGKQuU1VkfXGkcAspo8xQTfCffn5RHKNAv");
+declare_id!("4DJ9Kr1RjQCSMPborLrwF228RmQCUKnYZba44GZTricf");
 
 #[program]
 mod red_envelope {
@@ -20,6 +20,9 @@ mod red_envelope {
 
         #[msg("Already claimed")]
         AlreadyClaimed,
+
+        // #[msg("Max Claims Reached")]
+        // MaxClaimsReached
     }
     
     pub fn create_envelope(
@@ -27,11 +30,23 @@ mod red_envelope {
         id: u64,
         amount: u64, //In lamports
         time_limit_in_seconds: i64,
+        // max_claims: u64,
+        // creator_name: String,
     ) -> Result<()>  {
+        // let envelope = &mut ctx.accounts.envelope;
+        // envelope.id = id;
+        // envelope.creation_time = Clock::get()?.unix_timestamp;
+        // envelope.time_limit = time_limit_in_seconds;
+        // envelope.owner = ctx.accounts.signer.key();
+        // envelope.max_claims = max_claims;
+        // envelope.creator_name = "test".to_string();
+
         ctx.accounts.envelope.id = id;
         ctx.accounts.envelope.creation_time = Clock::get()?.unix_timestamp;
         ctx.accounts.envelope.time_limit = time_limit_in_seconds;
         ctx.accounts.envelope.owner = ctx.accounts.signer.key();
+        // ctx.accounts.envelope.max_claims = max_claims;
+        // ctx.accounts.envelope.creator_name = "test".to_string();
 
         let cpi_context = CpiContext::new(
             ctx.accounts.system_program.to_account_info(),
@@ -46,8 +61,13 @@ mod red_envelope {
         Ok(())
     }
 
-    pub fn claim(ctx: Context<Claim>, id: u64) -> Result<()>  {
+    pub fn claim(ctx: Context<Claim>, _id: u64) -> Result<()>  {
         let envelope = &mut ctx.accounts.envelope;
+
+        // Check maximum claims limit
+        // if envelope.claimed.len() as u64 >= envelope.max_claims {
+        //     return err!(MyError::MaxClaimsReached); // You need to define this error in MyError enum
+        // }
 
         // Check if the user has already claimed from this envelope
         if envelope.claimed.contains(&ctx.accounts.signer.key()) {
@@ -87,7 +107,7 @@ mod red_envelope {
         Ok(())
     }
 
-    pub fn delete_envelope(ctx: Context<DeleteEnvelope>, id: u64) -> Result<()> {      
+    pub fn delete_envelope(ctx: Context<DeleteEnvelope>, _id: u64) -> Result<()> {      
         if ctx.accounts.envelope.owner != ctx.accounts.signer.key() {
             return err!(MyError::Unauthorized); 
         }
@@ -100,14 +120,14 @@ mod red_envelope {
 }
 
 #[derive(Accounts)]
-#[instruction(id : u64)]
+#[instruction(id : u64, creator_name: String)]
 pub struct CreateEnvelope<'info> {
     #[account(
         init_if_needed,
-        seeds = [b"envelopeVault", id.to_le_bytes().as_ref()],
+        seeds = [b"envelopeVault1", id.to_le_bytes().as_ref()],
         bump,
         payer = signer,
-        space = 8 + Envelope::MAX_SIZE
+        space = 8 + Envelope::MAX_SIZE //+ creator_name.len()
     )]
     pub envelope: Account<'info, Envelope>,
     #[account(mut)]
@@ -116,11 +136,11 @@ pub struct CreateEnvelope<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(id : u64)]
+#[instruction(_id : u64)]
 pub struct Claim<'info> {
-    #[account(
+    #[account( 
         mut,
-        seeds = [b"envelopeVault", id.to_le_bytes().as_ref()],
+        seeds = [b"envelopeVault1", _id.to_le_bytes().as_ref()],
         bump
     )]
     pub envelope: Account<'info, Envelope>,
@@ -130,12 +150,12 @@ pub struct Claim<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(id : u64)]
+#[instruction(_id : u64)]
 pub struct DeleteEnvelope<'info> {
     #[account(
         mut,
         close = signer,
-        seeds = [b"envelopeVault", id.to_le_bytes().as_ref()],
+        seeds = [b"envelopeVault1", _id.to_le_bytes().as_ref()],
         bump
     )]
     pub envelope: Account<'info, Envelope>,
@@ -151,6 +171,8 @@ pub struct Envelope {
     pub time_limit: i64,
     pub owner: Pubkey,
     pub claimed: Vec<Pubkey>,
+    // pub max_claims: u64,
+    pub creator_name: String,
 }
 
 impl Envelope {

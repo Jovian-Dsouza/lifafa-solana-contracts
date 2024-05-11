@@ -10,7 +10,7 @@ const secretKey = JSON.parse(
   fs.readFileSync("/home/jovian/.config/solana/id.json", "utf8")
 );
 const wallet = anchor.web3.Keypair.fromSecretKey(Uint8Array.from(secretKey));
-console.log("Wallet loaded", path)
+console.log("Wallet loaded")
 
 // Configure the client to use the local cluster
 const provider = anchor.AnchorProvider.env();
@@ -42,7 +42,8 @@ console.log("Program Id:", program.programId)
 console.log("My address:", provider.wallet.publicKey.toString());
 printMyBalance();
 
-const id = 2; //TODO: generate unique random id for each envelope
+// const id = 2; //TODO: generate unique random id for each envelope
+const id = Math.floor(Math.random() * 10000000);
 const amount = web3.LAMPORTS_PER_SOL * 0.1;
 const timeLimit = 1000;
 const [envelopeVault, envelopeVaultBump] = anchor.web3.PublicKey.findProgramAddressSync(
@@ -54,11 +55,18 @@ const [envelopeVault, envelopeVaultBump] = anchor.web3.PublicKey.findProgramAddr
 );
 
 async function createEnvelope() {
+  const max_claims = 1
+
   console.log(`\nCreate Envelope, amount = ${toSol(amount)}, id = ${id}`);
   await printMyBalance();
   await printEnvelopeBalance(envelopeVault);
   const txHash = await program.methods
-    .createEnvelope(new anchor.BN(id), new anchor.BN(amount), new anchor.BN(timeLimit))
+    .createEnvelope(
+      new anchor.BN(id), 
+      new anchor.BN(amount), 
+      new anchor.BN(timeLimit), 
+      // new anchor.BN(max_claims)
+    )
     .accounts({
       envelope: envelopeVault,
       signer: provider.wallet.publicKey,
@@ -113,7 +121,7 @@ async function main(){
   await createEnvelope();
   // await claimEnvelope();
   // await claimEnvelope() // Should throw an error when claiming second time
-  // await deleteEnvelope();
+  await deleteEnvelope();
 }
 
 main();
