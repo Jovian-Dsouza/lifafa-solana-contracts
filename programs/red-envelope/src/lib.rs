@@ -8,7 +8,13 @@ declare_id!("GCVKE2fCqUvKwRUqjJ3YANW9acPisMxj1BmhXDML1pab");
 
 pub const MAX_CLAIMS_ALLOWED: u16 = 1000; 
 
-
+fn xor_shift(mut seed: u64) -> u64 {
+    seed ^= seed << 12;
+    seed ^= seed >> 25;
+    seed ^= seed << 27;
+    seed = (seed as u128 * 0x2545F4914F6CDD1D) as u64;
+    return seed;
+}
     
 #[program]
 mod red_envelope {
@@ -62,6 +68,12 @@ mod red_envelope {
     pub fn claim(ctx: Context<Claim>, _id: u64) -> Result<()>  {
         let envelope = &mut ctx.accounts.envelope;
 
+        let clock = Clock::get()?;
+        let time_left = (envelope.creation_time + envelope.time_limit) - clock.unix_timestamp;
+        if time_left <= 0 {
+            return err!(MyError::TimeLimitExpired); // Time limit exceeded
+        }
+
         // Check maximum claims limit
         if envelope.claimed.len() as u16 >= envelope.max_claims {
             return err!(MyError::MaxClaimsReached); 
@@ -79,20 +91,13 @@ mod red_envelope {
             return err!(MyError::AlreadyClaimed);
         }
 
-        let time_left = (envelope.creation_time + envelope.time_limit) - Clock::get()?.unix_timestamp;
-        if time_left <= 0 {
-            return err!(MyError::TimeLimitExpired); // Time limit exceeded
-        }
+        // TODO use Oracle for Security - however cost of 0.002 SOL will be added
+        // Pseudo random number - Uses timestamp, hash and xorshift
+        let hash = hash(&clock.slot.to_be_bytes());
+        let pseudo_random_number = xor_shift(u64::from_be_bytes(hash.to_bytes()[..8].try_into().unwrap()));
+
         let current_balance = ctx.accounts.envelope.to_account_info().lamports();
         let max_withdrawable_balance = current_balance.saturating_sub(Rent::get()?.minimum_balance(8 + Envelope::MAX_SIZE));
-
-        // Pseudo random number - TODO use Oracle for Security
-        let clock = Clock::get()?;
-        let pseudo_random_number = ((u64::from_le_bytes(
-            <[u8; 8]>::try_from(&hash(&clock.unix_timestamp.to_be_bytes()).to_bytes()[..8])
-            .unwrap(),
-        ) * clock.slot)
-            % u32::MAX as u64) as u64;
         
         let claim_amount =  pseudo_random_number % max_withdrawable_balance; // TODO random amount, between 0 and max withdrawable balance
         **ctx
