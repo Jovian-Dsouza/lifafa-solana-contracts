@@ -62,7 +62,8 @@ async function createEnvelope() {
       new anchor.BN(id), 
       new anchor.BN(amount), 
       new anchor.BN(timeLimit),
-      1
+      1,
+      "jovian"
     )
     .accounts({
       envelope: envelopeVault,

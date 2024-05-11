@@ -4,9 +4,11 @@ use anchor_lang::solana_program::pubkey::Pubkey;
 use anchor_lang::solana_program::clock::Clock;
 use anchor_lang::solana_program::hash::hash;
 
-declare_id!("GCVKE2fCqUvKwRUqjJ3YANW9acPisMxj1BmhXDML1pab");
+declare_id!("58chdRkNN8RN72jSyUGnwcN8nhUVrHcZrHEGpcYF6Jsz");
 
 pub const MAX_CLAIMS_ALLOWED: u16 = 1000; 
+pub const MAX_OWNER_NAME: u16 = 32; 
+pub const ENVELOPE_SEED: &str = "envelopeVault";
 
 fn xor_shift(mut seed: u64) -> u64 {
     seed ^= seed << 12;
@@ -36,6 +38,9 @@ mod red_envelope {
 
         #[msg("Max claims limit exceeded")]
         MaxClaimsLimitExceeded,
+
+        #[msg("Owner name too long")]
+        OwnerNameTooLong,
     }
     
     pub fn create_envelope(
@@ -44,13 +49,19 @@ mod red_envelope {
         amount: u64, //In lamports
         time_limit_in_seconds: i64,
         max_claims: u16,
+        owner_name: String,
     ) -> Result<()>  {
+        require!(
+            owner_name.len() as u16 <= MAX_OWNER_NAME,
+            MyError::OwnerNameTooLong
+        );
         require!(max_claims <= MAX_CLAIMS_ALLOWED, MyError::MaxClaimsLimitExceeded);
         ctx.accounts.envelope.id = id;
         ctx.accounts.envelope.creation_time = Clock::get()?.unix_timestamp;
         ctx.accounts.envelope.time_limit = time_limit_in_seconds;
         ctx.accounts.envelope.owner = ctx.accounts.signer.key();
         ctx.accounts.envelope.max_claims = max_claims;
+        ctx.accounts.envelope.owner_name = owner_name;
 
         let cpi_context = CpiContext::new(
             ctx.accounts.system_program.to_account_info(),
@@ -134,7 +145,7 @@ mod red_envelope {
 pub struct CreateEnvelope<'info> {
     #[account(
         init_if_needed,
-        seeds = [b"envelopeVault", id.to_le_bytes().as_ref()],
+        seeds = [ENVELOPE_SEED.as_bytes(), id.to_le_bytes().as_ref()],
         bump,
         payer = signer,
         space = 8 + Envelope::MAX_SIZE
@@ -150,7 +161,7 @@ pub struct CreateEnvelope<'info> {
 pub struct Claim<'info> {
     #[account(
         mut,
-        seeds = [b"envelopeVault", _id.to_le_bytes().as_ref()],
+        seeds = [ENVELOPE_SEED.as_bytes(), _id.to_le_bytes().as_ref()],
         bump
     )]
     pub envelope: Account<'info, Envelope>,
@@ -165,7 +176,7 @@ pub struct DeleteEnvelope<'info> {
     #[account(
         mut,
         close = signer,
-        seeds = [b"envelopeVault", _id.to_le_bytes().as_ref()],
+        seeds = [ENVELOPE_SEED.as_bytes(), _id.to_le_bytes().as_ref()],
         bump
     )]
     pub envelope: Account<'info, Envelope>,
@@ -180,10 +191,11 @@ pub struct Envelope {
     pub creation_time: i64,
     pub time_limit: i64,
     pub owner: Pubkey,
+    pub owner_name: String,
     pub claimed: Vec<[u8; 8]>, // Stores the first 8 bytes of the hash of the claimant's public key
     pub max_claims: u16,
 }
 
 impl Envelope {
-    pub const MAX_SIZE: usize = 8 + 8 + 8 + 32 + 4+(MAX_CLAIMS_ALLOWED as usize * 8) + 4;
+    pub const MAX_SIZE: usize = 8 + 8 + 8 + 32 + MAX_OWNER_NAME as usize + 4+(MAX_CLAIMS_ALLOWED as usize * 8) + 4;
 }
