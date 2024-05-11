@@ -4,7 +4,7 @@ use anchor_lang::solana_program::pubkey::Pubkey;
 use anchor_lang::solana_program::clock::Clock;
 use anchor_lang::solana_program::hash::hash;
 
-declare_id!("4pNnBsmfPeTGKQuU1VkfXGkcAspo8xQTfCffn5RHKNAv");
+declare_id!("4DJ9Kr1RjQCSMPborLrwF228RmQCUKnYZba44GZTricf");
 
 #[program]
 mod red_envelope {
@@ -46,7 +46,7 @@ mod red_envelope {
         Ok(())
     }
 
-    pub fn claim(ctx: Context<Claim>, id: u64) -> Result<()>  {
+    pub fn claim(ctx: Context<Claim>, _id: u64) -> Result<()>  {
         let envelope = &mut ctx.accounts.envelope;
 
         // Check if the user has already claimed from this envelope
@@ -87,7 +87,7 @@ mod red_envelope {
         Ok(())
     }
 
-    pub fn delete_envelope(ctx: Context<DeleteEnvelope>, id: u64) -> Result<()> {      
+    pub fn delete_envelope(ctx: Context<DeleteEnvelope>, _id: u64) -> Result<()> {      
         if ctx.accounts.envelope.owner != ctx.accounts.signer.key() {
             return err!(MyError::Unauthorized); 
         }
@@ -116,11 +116,11 @@ pub struct CreateEnvelope<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(id : u64)]
+#[instruction(_id : u64)]
 pub struct Claim<'info> {
     #[account(
         mut,
-        seeds = [b"envelopeVault", id.to_le_bytes().as_ref()],
+        seeds = [b"envelopeVault", _id.to_le_bytes().as_ref()],
         bump
     )]
     pub envelope: Account<'info, Envelope>,
@@ -130,12 +130,12 @@ pub struct Claim<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(id : u64)]
+#[instruction(_id : u64)]
 pub struct DeleteEnvelope<'info> {
     #[account(
         mut,
         close = signer,
-        seeds = [b"envelopeVault", id.to_le_bytes().as_ref()],
+        seeds = [b"envelopeVault", _id.to_le_bytes().as_ref()],
         bump
     )]
     pub envelope: Account<'info, Envelope>,
