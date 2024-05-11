@@ -4,8 +4,12 @@ use anchor_lang::solana_program::pubkey::Pubkey;
 use anchor_lang::solana_program::clock::Clock;
 use anchor_lang::solana_program::hash::hash;
 
-declare_id!("4DJ9Kr1RjQCSMPborLrwF228RmQCUKnYZba44GZTricf");
+declare_id!("GCVKE2fCqUvKwRUqjJ3YANW9acPisMxj1BmhXDML1pab");
 
+pub const MAX_CLAIMS_ALLOWED: u16 = 1000; 
+
+
+    
 #[program]
 mod red_envelope {
     use super::*;
@@ -20,6 +24,12 @@ mod red_envelope {
 
         #[msg("Already claimed")]
         AlreadyClaimed,
+
+        #[msg("Max Claims Reached")]
+        MaxClaimsReached,
+
+        #[msg("Max claims limit exceeded")]
+        MaxClaimsLimitExceeded,
     }
     
     pub fn create_envelope(
@@ -27,11 +37,14 @@ mod red_envelope {
         id: u64,
         amount: u64, //In lamports
         time_limit_in_seconds: i64,
+        max_claims: u16,
     ) -> Result<()>  {
+        require!(max_claims <= MAX_CLAIMS_ALLOWED, MyError::MaxClaimsLimitExceeded);
         ctx.accounts.envelope.id = id;
         ctx.accounts.envelope.creation_time = Clock::get()?.unix_timestamp;
         ctx.accounts.envelope.time_limit = time_limit_in_seconds;
         ctx.accounts.envelope.owner = ctx.accounts.signer.key();
+        ctx.accounts.envelope.max_claims = max_claims;
 
         let cpi_context = CpiContext::new(
             ctx.accounts.system_program.to_account_info(),
@@ -49,8 +62,20 @@ mod red_envelope {
     pub fn claim(ctx: Context<Claim>, _id: u64) -> Result<()>  {
         let envelope = &mut ctx.accounts.envelope;
 
+        // Check maximum claims limit
+        if envelope.claimed.len() as u16 >= envelope.max_claims {
+            return err!(MyError::MaxClaimsReached); 
+        }
+
         // Check if the user has already claimed from this envelope
-        if envelope.claimed.contains(&ctx.accounts.signer.key()) {
+        // Hash the claimant's public key and take the first 8 bytes
+        let claimant_hash = {
+            let hash = hash(&ctx.accounts.signer.key().to_bytes());
+            let mut slice = [0u8; 8];
+            slice.copy_from_slice(&hash.to_bytes()[..8]);
+            slice
+        };
+        if envelope.claimed.contains(&claimant_hash) {
             return err!(MyError::AlreadyClaimed);
         }
 
@@ -81,7 +106,7 @@ mod red_envelope {
             .to_account_info()
             .try_borrow_mut_lamports()? += claim_amount;
 
-        ctx.accounts.envelope.claimed.push(ctx.accounts.signer.key());
+        ctx.accounts.envelope.claimed.push(claimant_hash);
 
         msg!("Envelope Claimed, Amount: {}", claim_amount);
         Ok(())
@@ -150,9 +175,10 @@ pub struct Envelope {
     pub creation_time: i64,
     pub time_limit: i64,
     pub owner: Pubkey,
-    pub claimed: Vec<Pubkey>,
+    pub claimed: Vec<[u8; 8]>, // Stores the first 8 bytes of the hash of the claimant's public key
+    pub max_claims: u16,
 }
 
 impl Envelope {
-    pub const MAX_SIZE: usize = 8 + 8 + 8 + 32 + (32 * 10); //TODO set storage for 10 clamaied accounts 
+    pub const MAX_SIZE: usize = 8 + 8 + 8 + 32 + 4+(MAX_CLAIMS_ALLOWED as usize * 8) + 4;
 }
