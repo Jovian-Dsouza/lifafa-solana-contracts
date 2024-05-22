@@ -35,28 +35,22 @@ describe("Test Red Envelope", () => {
     const timeLimit = 1000;
     const maxClaims = 1;
     const ownerName = "jovian";
+    const desc = "Gift"
 
     const [lifafaState] = findLifafaState(program.programId, id);
 
-    console.log(`\nCreate Lifafa, amount = ${toSol(amount)}, id = ${id}`);
-
-    const txHash = await program.methods
-      .createSolLifafa(
-        new anchor.BN(id),
-        new anchor.BN(amount),
-        new anchor.BN(timeLimit),
+    await createLifafa(
+        program, 
+        provider, 
+        wallet, 
+        id, 
+        amount, 
+        timeLimit,
         maxClaims,
-        ownerName
-      )
-      .accounts({
-        lifafa: lifafaState,
-        signer: provider.wallet.publicKey,
-        systemProgram: web3.SystemProgram.programId,
-      })
-      .signers([wallet])
-      .rpc();
-    // Confirm transaction
-    await confirmTransaction(provider.connection, txHash);
+        ownerName, 
+        desc,
+        lifafaState
+      );
 
     // Fetch the created lifafa account
     const createdLifafa = await program.account.lifafa.fetch(lifafaState);
@@ -85,27 +79,24 @@ describe("Test Red Envelope", () => {
     const timeLimit = 1000;
     const maxClaims = 1;
     const ownerName = "jovian";
+    const desc = "Gift"
 
     const [lifafaState] = findLifafaState(program.programId, id);
 
     console.log(`\nCreating Lifafa for claiming test, amount = ${toSol(amount)}, id = ${id}`);
 
-    const createTxHash = await program.methods
-      .createSolLifafa(
-        new anchor.BN(id),
-        new anchor.BN(amount),
-        new anchor.BN(timeLimit),
+    await createLifafa(
+        program, 
+        provider, 
+        wallet, 
+        id, 
+        amount, 
+        timeLimit,
         maxClaims,
-        ownerName
-      )
-      .accounts({
-        lifafa: lifafaState,
-        signer: provider.wallet.publicKey,
-        systemProgram: web3.SystemProgram.programId,
-      })
-      .signers([wallet])
-      .rpc();
-    await confirmTransaction(provider.connection, createTxHash);
+        ownerName, 
+        desc,
+        lifafaState
+      );
 
     // Initial balances before claiming
     const initialWalletBalance = await getBalance(provider.connection, provider.wallet.publicKey);
@@ -115,16 +106,7 @@ describe("Test Red Envelope", () => {
     console.log(`Initial lifafa balance: ${initialLifafaBalance} SOL`);
 
     // Claim the lifafa
-    const claimTxHash = await program.methods
-      .claimSolLifafa(new anchor.BN(id))
-      .accounts({
-        lifafa: lifafaState,
-        signer: provider.wallet.publicKey,
-        systemProgram: web3.SystemProgram.programId,
-      })
-      .signers([wallet])
-      .rpc();
-    await confirmTransaction(provider.connection, claimTxHash);
+    await claimLifafa(program, provider, wallet, id, lifafaState);
 
     // Balances after claiming
     const finalWalletBalance = await getBalance(provider.connection, provider.wallet.publicKey);

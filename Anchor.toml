@@ -3,7 +3,7 @@ seeds = false
 skip-lint = false
 
 [programs.devnet]
-lifafa = "GvEZHBsgMZ6SoAwDUEKTfk4seBKMCesUPzJ9FbRY4SsE"
+lifafa = "AXBZp473xo61tmpSryZfuZMGBs2c1q2MdVh2yW7GLS1z"
 
 [registry]
 url = "https://api.apr.dev"

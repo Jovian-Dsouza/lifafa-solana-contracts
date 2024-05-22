@@ -33,6 +33,7 @@ export async function createLifafa(
     timeLimit: number, 
     maxClaims: number, 
     ownerName: string,
+    desc: string,
     lifafaState: web3.PublicKey, 
 ) {
   console.log(`\nCreate Lifafa, amount = ${toSol(amount)}, id = ${id}`);
@@ -42,7 +43,8 @@ export async function createLifafa(
       new anchor.BN(amount),
       new anchor.BN(timeLimit),
       maxClaims,
-      ownerName
+      ownerName,
+      desc
     )
     .accounts({
       lifafa: lifafaState,

@@ -34,6 +34,7 @@ async function main() {
   const timeLimit = 1000;
   const maxClaims = 2
   const ownerName = "jovian"
+  const desc = "Gift"
 
   const [lifafaState] = findLifafaState(program.programId, id);
 
@@ -57,6 +58,7 @@ async function main() {
     timeLimit,
     maxClaims,
     ownerName, 
+    desc,
     lifafaState);
   await printBalances();
   

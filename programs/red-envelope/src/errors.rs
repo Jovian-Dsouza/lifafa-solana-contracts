@@ -19,4 +19,7 @@ pub enum LifafaError {
 
     #[msg("Owner name too long")]
     OwnerNameTooLong,
+
+    #[msg("Description too long")]
+    DescriptionTooLong,
 }
