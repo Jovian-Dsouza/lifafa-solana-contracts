@@ -1,12 +1,12 @@
 [package]
-name = "red-envelope"
+name = "lifafa"
 version = "0.1.0"
 description = "Created with Anchor"
 edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "red_envelope"
+name = "lifafa"
 
 [features]
 no-entrypoint = []
@@ -18,3 +18,5 @@ default = []
 [dependencies]
 anchor-lang = {version = "0.29.0", features = ["init-if-needed"]}
 solana-program = "=1.18.1"
+anchor-spl = "0.29.0"
+spl-token = "4.0.1"
