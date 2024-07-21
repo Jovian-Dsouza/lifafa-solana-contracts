@@ -83,7 +83,7 @@ describe("Test Red Envelope", () => {
     assert(id === createdLifafa.id.toNumber());
     // assert(amount === createdLifafa.amount.toNumber());
     assert(timeLimit === createdLifafa.timeLimit.toNumber());
-    assert(maxClaims === createdLifafa.maxClaims);
+    assert(maxClaims === createdLifafa.maxClaims.toNumber());
     assert(ownerName === createdLifafa.ownerName);
   });
 

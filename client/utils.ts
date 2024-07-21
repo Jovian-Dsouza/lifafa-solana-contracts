@@ -56,7 +56,7 @@ export async function createLifafa(
       new anchor.BN(id),
       new anchor.BN(amount),
       new anchor.BN(timeLimit),
-      maxClaims,
+      new anchor.BN(maxClaims),
       ownerName,
       desc
     )
