@@ -9,7 +9,7 @@ lifafa = "AXBZp473xo61tmpSryZfuZMGBs2c1q2MdVh2yW7GLS1z"
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "devnet"
+cluster = "Localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
