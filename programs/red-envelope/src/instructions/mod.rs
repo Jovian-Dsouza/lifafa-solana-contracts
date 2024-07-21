@@ -1,6 +1,9 @@
 pub mod create_sol_lifafa;
 pub use create_sol_lifafa::*;
 
+pub mod create_spl_lifafa;
+pub use create_spl_lifafa::*;
+
 pub mod claim_sol_lifafa;
 pub use claim_sol_lifafa::*;
 

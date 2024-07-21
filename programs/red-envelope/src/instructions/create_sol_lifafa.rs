@@ -41,8 +41,6 @@ pub fn create_sol_lifafa(
         },
     );
     system_program::transfer(cpi_context, amount)?;
-    msg!("Lifafa Created with ID: {}", id);
-
     Ok(())
 }
 
