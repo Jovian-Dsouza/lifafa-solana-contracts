@@ -26,31 +26,11 @@ mod lifafa {
         id: u64,
         amount: u64, //In lamports
         time_limit_in_seconds: i64,
-        max_claims: u16,
+        max_claims: u64,
         owner_name: String,
         desc: String,
     ) -> Result<()>{
         instructions::create_sol_lifafa::create_sol_lifafa(
-            ctx, 
-            id, 
-            amount, 
-            time_limit_in_seconds, 
-            max_claims, 
-            owner_name,
-            desc
-        )
-    }
-
-    pub fn create_spl_lifafa(
-        ctx: Context<CreateSplLifafa>,
-        id: u64,
-        amount: u64, //In lamports
-        time_limit_in_seconds: i64,
-        max_claims: u16,
-        owner_name: String,
-        desc: String,
-    ) -> Result<()>{
-        instructions::create_spl_lifafa::create_spl_lifafa(
             ctx, 
             id, 
             amount, 

@@ -1,5 +1,5 @@
 pub use crate::errors::LifafaError;
-use crate::{MAX_CLAIMS_ALLOWED, MAX_OWNER_NAME, MAX_DESC, LIFAFA_SEED, Lifafa};
+use crate::{ MAX_OWNER_NAME, MAX_DESC, LIFAFA_SEED, Lifafa, UserClaim};
 
 use anchor_lang::prelude::*;
 use anchor_lang::system_program;
@@ -11,7 +11,7 @@ pub fn create_sol_lifafa(
     id: u64,
     amount: u64, //In lamports
     time_limit_in_seconds: i64,
-    max_claims: u16,
+    max_claims: u64,
     owner_name: String,
     desc: String,
 ) -> Result<()>  {
@@ -23,13 +23,13 @@ pub fn create_sol_lifafa(
         desc.len() as u16 <= MAX_DESC,
         LifafaError::DescriptionTooLong
     );
-    require!(max_claims <= MAX_CLAIMS_ALLOWED, LifafaError::MaxClaimsLimitExceeded);
     ctx.accounts.lifafa.id = id;
     ctx.accounts.lifafa.creation_time = Clock::get()?.unix_timestamp;
     ctx.accounts.lifafa.time_limit = time_limit_in_seconds;
     ctx.accounts.lifafa.owner = ctx.accounts.signer.key();
-    ctx.accounts.lifafa.max_claims = max_claims;
     ctx.accounts.lifafa.owner_name = owner_name;
+    ctx.accounts.lifafa.claims = 0;
+    ctx.accounts.lifafa.max_claims = max_claims;
     ctx.accounts.lifafa.amount = amount;
     ctx.accounts.lifafa.desc = desc;
 
@@ -54,9 +54,23 @@ pub struct CreateSolLifafa<'info> {
         seeds = [LIFAFA_SEED.as_bytes(), id.to_le_bytes().as_ref()],
         bump,
         payer = signer,
-        space = 8 + Lifafa::MAX_SIZE
+        space = 8 + Lifafa::INIT_SPACE
     )]
     pub lifafa: Account<'info, Lifafa>,
+
+    #[account(
+            init_if_needed, 
+            payer = signer, 
+            space = 8 + UserClaim::INIT_SPACE,
+            seeds = [
+                b"user_claim", 
+                lifafa.key().as_ref(),
+                signer.key().as_ref(),
+            ],
+            bump,
+        )]
+    pub user_claim: Account<'info, UserClaim>,
+
     #[account(mut)]
     pub signer: Signer<'info>,
     pub system_program: Program<'info, System>,

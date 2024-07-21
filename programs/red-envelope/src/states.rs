@@ -1,21 +1,27 @@
 use anchor_lang::prelude::*;
-use crate::{MAX_CLAIMS_ALLOWED, MAX_OWNER_NAME, MAX_DESC};
+use crate::{ MAX_OWNER_NAME, MAX_DESC};
 
 
 #[account]
+#[derive(InitSpace)]
 pub struct Lifafa {
     pub id: u64,
     pub creation_time: i64,
     pub time_limit: i64,
     pub owner: Pubkey,
+    #[max_len(MAX_OWNER_NAME)]
     pub owner_name: String,
-    pub claimed: Vec<[u8; 8]>, // Stores the first 8 bytes of the hash of the claimant's public key
-    pub max_claims: u16,
+    pub claims: u64,
+    pub max_claims: u64,
     pub mint_of_token_being_sent: Pubkey,
     pub amount: u64,
+    #[max_len(MAX_DESC)]
     pub desc: String
 }
 
-impl Lifafa {
-    pub const MAX_SIZE: usize = 8 + 8 + 8 + 32 + MAX_OWNER_NAME as usize + 4+(MAX_CLAIMS_ALLOWED as usize * 8) + 4 + 32 + 8 + MAX_DESC as usize ;
+#[account]
+#[derive(InitSpace)]
+pub struct UserClaim {
+    pub claimed: bool,
+    pub amount_claimed: u64
 }
