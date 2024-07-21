@@ -10,7 +10,7 @@ use anchor_lang::prelude::*;
 use anchor_lang::solana_program::pubkey::Pubkey;
 
 
-declare_id!("AXBZp473xo61tmpSryZfuZMGBs2c1q2MdVh2yW7GLS1z");
+declare_id!("2h4ToTTMT93ApLUHGqsvFofsD9JSRdLBsMpAxohkgT12");
 
 pub const MAX_CLAIMS_ALLOWED: u16 = 1000; 
 pub const MAX_OWNER_NAME: u16 = 32;
@@ -31,6 +31,26 @@ mod lifafa {
         desc: String,
     ) -> Result<()>{
         instructions::create_sol_lifafa::create_sol_lifafa(
+            ctx, 
+            id, 
+            amount, 
+            time_limit_in_seconds, 
+            max_claims, 
+            owner_name,
+            desc
+        )
+    }
+
+    pub fn create_spl_lifafa(
+        ctx: Context<CreateSplLifafa>,
+        id: u64,
+        amount: u64, //In lamports
+        time_limit_in_seconds: i64,
+        max_claims: u16,
+        owner_name: String,
+        desc: String,
+    ) -> Result<()>{
+        instructions::create_spl_lifafa::create_spl_lifafa(
             ctx, 
             id, 
             amount, 
