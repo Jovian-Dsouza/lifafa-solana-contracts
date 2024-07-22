@@ -1,9 +1,11 @@
+[toolchain]
+
 [features]
-seeds = false
+resolution = true
 skip-lint = false
 
 [programs.devnet]
-lifafa = "2h4ToTTMT93ApLUHGqsvFofsD9JSRdLBsMpAxohkgT12"
+lifafa = "ExMuFdSFp8GKGcT2TmqzzQQ6BcxxCuEGi5JcbmUBbxfK"
 
 [registry]
 url = "https://api.apr.dev"
@@ -13,5 +15,5 @@ cluster = "Localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
-test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
 client = "yarn run ts-node client/*.ts"
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"

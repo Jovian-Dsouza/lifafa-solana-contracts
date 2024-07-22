@@ -10,7 +10,7 @@ use anchor_lang::prelude::*;
 use anchor_lang::solana_program::pubkey::Pubkey;
 
 
-declare_id!("2h4ToTTMT93ApLUHGqsvFofsD9JSRdLBsMpAxohkgT12");
+declare_id!("ExMuFdSFp8GKGcT2TmqzzQQ6BcxxCuEGi5JcbmUBbxfK");
 
 pub const MAX_CLAIMS_ALLOWED: u16 = 1000; 
 pub const MAX_OWNER_NAME: u16 = 32;
