@@ -1,5 +1,5 @@
 pub use crate::errors::LifafaError;
-use crate::{ MAX_OWNER_NAME, MAX_DESC, LIFAFA_SEED, Lifafa, UserClaim};
+use crate::{ MAX_OWNER_NAME, MAX_DESC, LIFAFA_SEED, Lifafa};
 
 use anchor_lang::prelude::*;
 use anchor_lang::system_program;
@@ -56,19 +56,7 @@ pub struct CreateSolLifafa<'info> {
     )]
     pub lifafa: Account<'info, Lifafa>,
 
-    #[account(
-            init_if_needed, 
-            payer = signer, 
-            space = 8 + UserClaim::INIT_SPACE,
-            seeds = [
-                b"user_claim", 
-                lifafa.key().as_ref(),
-                signer.key().as_ref(),
-            ],
-            bump,
-        )]
-    pub user_claim: Account<'info, UserClaim>,
-
+    
     #[account(mut)]
     pub signer: Signer<'info>,
     pub system_program: Program<'info, System>,

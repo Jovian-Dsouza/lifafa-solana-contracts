@@ -36,7 +36,7 @@ pub fn create_spl_lifafa(
     ctx.accounts.lifafa.max_claims = max_claims;
     ctx.accounts.lifafa.amount = amount;
     ctx.accounts.lifafa.desc = desc;
-
+    ctx.accounts.lifafa.bump = ctx.bumps.lifafa;
 
     let transfer_accounts = TransferChecked {
         from: ctx.accounts.ata.to_account_info(),

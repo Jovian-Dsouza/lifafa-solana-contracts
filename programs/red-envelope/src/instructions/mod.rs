@@ -7,6 +7,9 @@ pub use create_spl_lifafa::*;
 pub mod claim_sol_lifafa;
 pub use claim_sol_lifafa::*;
 
+pub mod claim_spl_lifafa;
+pub use claim_spl_lifafa::*;
+
 pub mod delete_sol_lifafa;
 pub use delete_sol_lifafa::*;
 

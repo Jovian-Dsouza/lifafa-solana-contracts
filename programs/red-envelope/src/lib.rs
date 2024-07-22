@@ -68,4 +68,8 @@ mod lifafa {
             desc
         )
     }
+
+    pub fn claim_spl_lifafa(ctx: Context<ClaimSplLifafa>, _id: u64) -> Result<()>  {
+        instructions::claim_spl_lifafa::claim_spl_lifafa(ctx, _id)
+    }
 }

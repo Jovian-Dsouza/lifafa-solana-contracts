@@ -216,6 +216,26 @@ describe("Test Red Envelope", () => {
       `To account balance: ${await getTokenBalance(provider, vault)}`
     );
 
+    console.log("\nClaiming Lifafa");
+    const txHash2 = await program.methods
+      .claimSplLifafa(new anchor.BN(id))
+      .accounts({
+        mint: mint,
+        vault: vault,
+        signer: provider.wallet.publicKey,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .signers([wallet])
+      .rpc();
+    await confirmTransaction(provider.connection, txHash2);
+
+    console.log(
+      `From account balance: ${await getTokenBalance(provider, ata)}`
+    );
+    console.log(
+      `To account balance: ${await getTokenBalance(provider, vault)}`
+    );
+
     // assert.strictEqual(
     //   fromBalance,
     //   0,

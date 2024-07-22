@@ -16,7 +16,8 @@ pub struct Lifafa {
     pub mint_of_token_being_sent: Pubkey,
     pub amount: u64,
     #[max_len(MAX_DESC)]
-    pub desc: String
+    pub desc: String,
+    pub bump: u8
 }
 
 #[account]
