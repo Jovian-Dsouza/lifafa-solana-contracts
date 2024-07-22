@@ -72,4 +72,8 @@ mod lifafa {
     pub fn claim_spl_lifafa(ctx: Context<ClaimSplLifafa>, _id: u64) -> Result<()>  {
         instructions::claim_spl_lifafa::claim_spl_lifafa(ctx, _id)
     }
+
+    pub fn delete_spl_lifafa(ctx: Context<DeleteSplLifafa>, _id: u64) -> Result<()> {      
+        instructions::delete_spl_lifafa::delete_spl_lifafa(ctx, _id)
+    }
 }

@@ -13,5 +13,8 @@ pub use claim_spl_lifafa::*;
 pub mod delete_sol_lifafa;
 pub use delete_sol_lifafa::*;
 
+pub mod delete_spl_lifafa;
+pub use delete_spl_lifafa::*;
+
 pub mod helpers;
 pub use helpers::{ xor_shift };
