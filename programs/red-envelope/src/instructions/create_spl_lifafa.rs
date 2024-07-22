@@ -37,6 +37,7 @@ pub fn create_spl_lifafa(
     ctx.accounts.lifafa.amount = amount;
     ctx.accounts.lifafa.desc = desc;
     ctx.accounts.lifafa.bump = ctx.bumps.lifafa;
+    ctx.accounts.lifafa.mint_of_token_being_sent = ctx.accounts.mint.key();
 
     let transfer_accounts = TransferChecked {
         from: ctx.accounts.ata.to_account_info(),
