@@ -9,7 +9,12 @@ import {
   getOrCreateAssociatedTokenAccount,
   mintTo,
 } from "@solana/spl-token";
-import { Connection, PublicKey, Keypair } from "@solana/web3.js";
+import {
+  Connection,
+  PublicKey,
+  Keypair,
+  LAMPORTS_PER_SOL,
+} from "@solana/web3.js";
 
 const LIFAFA_SEED = "lifafa";
 
@@ -182,7 +187,7 @@ export async function claimSplLifafa(
     .accounts({
       mint: mint,
       vault: vault,
-      signer: provider.wallet.publicKey,
+      signer: wallet.publicKey,
       tokenProgram: TOKEN_PROGRAM_ID,
     })
     .signers([wallet])
@@ -198,7 +203,7 @@ export async function deleteSplLifafa(
   mint: PublicKey,
   vault: PublicKey
 ) {
-  console.log("\Delete Lifafa");
+  console.log("Delete Lifafa");
   const txHash = await program.methods
     .deleteSplLifafa(new anchor.BN(id))
     .accounts({
@@ -216,9 +221,8 @@ export async function getTokenBalance(
   provider: anchor.AnchorProvider,
   tokenAccount: anchor.web3.PublicKey
 ) {
-  const accountInfo = await provider.connection.getTokenAccountBalance(
-    new PublicKey(tokenAccount)
-  );
+  const accountInfo =
+    await provider.connection.getTokenAccountBalance(tokenAccount);
   return new BN(accountInfo.value.amount);
 }
 
@@ -258,8 +262,57 @@ export async function getRequiredATA(
       true
     )
   ).address;
-  
+
   return [mint, ata, vault];
+}
+
+export async function createTestWallet(
+  provider: anchor.AnchorProvider,
+  signer: anchor.web3.Keypair,
+  mint: PublicKey
+): Promise<[anchor.web3.Keypair, PublicKey]> {
+  const wallet = web3.Keypair.generate();
+  const mintAmount = 1000 * 1e6;
+  const ata = (
+    await getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      signer,
+      mint,
+      wallet.publicKey,
+      false
+    )
+  ).address;
+  // await mintTo(
+  //   provider.connection,
+  //   signer, //fee payer
+  //   mint,
+  //   ata,
+  //   signer, //mint authority
+  //   mintAmount
+  // );
+
+  // Transfer SOL from signer to wallet
+  await transferSol(provider, signer, wallet.publicKey, 2 * LAMPORTS_PER_SOL); // Transfer 1 SOL (1e9 lamports)
+  return [wallet, ata];
+}
+
+// Function to transfer SOL
+async function transferSol(
+  provider: anchor.AnchorProvider,
+  from: anchor.web3.Keypair,
+  to: PublicKey,
+  amount: number
+) {
+  const transaction = new anchor.web3.Transaction().add(
+    anchor.web3.SystemProgram.transfer({
+      fromPubkey: from.publicKey,
+      toPubkey: to,
+      lamports: amount,
+    })
+  );
+
+  // Send the transaction
+  const signature = await provider.sendAndConfirm(transaction, [from]);
 }
 
 export async function getATABalances(
@@ -290,7 +343,10 @@ export interface LifafaData {
   desc: string;
 }
 
-export async function getLifafaData(program: anchor.Program<Lifafa>, id: number) {
+export async function getLifafaData(
+  program: anchor.Program<Lifafa>,
+  id: number
+) {
   const [lifafaPDA] = findLifafaState(program.programId, id);
   return (await program.account.lifafa.fetch(lifafaPDA)) as LifafaData;
 }
@@ -308,9 +364,9 @@ export function getTestData(): TestInputData {
   return {
     id: generateLifafaId(),
     timeLimit: 1000,
-    maxClaims: 5,
+    maxClaims: 2,
     ownerName: "jovian",
     desc: "Gift for winning the hackathon",
     amount: 100 * 1e6,
-  }
+  };
 }

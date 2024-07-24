@@ -14,9 +14,6 @@ pub enum LifafaError {
     #[msg("Max Claims Reached")]
     MaxClaimsReached,
 
-    #[msg("Max claims limit exceeded")]
-    MaxClaimsLimitExceeded,
-
     #[msg("Owner name too long")]
     OwnerNameTooLong,
 
