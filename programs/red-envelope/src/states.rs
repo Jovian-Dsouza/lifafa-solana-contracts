@@ -1,10 +1,21 @@
 use anchor_lang::prelude::*;
 use crate::{ MAX_OWNER_NAME, MAX_DESC};
+pub use crate::errors::LifafaError;
 
 #[derive(InitSpace, AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq, Debug)]
 pub enum ClaimMode {
     Random,
     Equal,
+}
+
+impl ClaimMode {
+    pub fn from_u8(value: u8) -> Result<Self> {
+        match value {
+            0 => Ok(ClaimMode::Random),
+            1 => Ok(ClaimMode::Equal),
+            _ => Err(LifafaError::InvalidClaimMode.into()),
+        }
+    }
 }
 
 #[account]

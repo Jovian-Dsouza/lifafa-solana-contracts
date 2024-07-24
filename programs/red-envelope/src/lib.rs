@@ -29,7 +29,7 @@ mod lifafa {
         max_claims: u64,
         owner_name: String,
         desc: String,
-        claim_mode: ClaimMode,
+        claim_mode: u8,
     ) -> Result<()>{
         instructions::create_spl_lifafa::create_spl_lifafa(
             ctx, 

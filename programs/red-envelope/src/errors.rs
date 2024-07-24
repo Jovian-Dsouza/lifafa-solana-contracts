@@ -22,4 +22,7 @@ pub enum LifafaError {
 
     #[msg("Lifafa Already Exists")]
     LifafaAlreadyExists,
+
+    #[msg("Invalid Claim Mode")]
+    InvalidClaimMode,
 }

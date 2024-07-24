@@ -19,8 +19,10 @@ pub fn create_spl_lifafa(
     max_claims: u64,
     owner_name: String,
     desc: String,
-    claim_mode: ClaimMode,
+    claim_mode: u8,
 ) -> Result<()>  {
+    // Convert and validate claim_mode
+    let claim_mode = ClaimMode::from_u8(claim_mode)?;
     // Check if the Lifafa account is already initialized
     require!(
         ctx.accounts.lifafa.owner == Pubkey::default(),
