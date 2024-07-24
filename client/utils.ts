@@ -43,76 +43,6 @@ export function toSol(amount: number): number {
   return amount / web3.LAMPORTS_PER_SOL;
 }
 
-export async function createLifafa(
-  program: anchor.Program<Lifafa>,
-  provider: anchor.AnchorProvider,
-  wallet: web3.Keypair,
-  id: number,
-  amount: number,
-  timeLimit: number,
-  maxClaims: number,
-  ownerName: string,
-  desc: string,
-  lifafaState: web3.PublicKey
-) {
-  console.log(`\nCreate Lifafa, amount = ${toSol(amount)}, id = ${id}`);
-  const txHash = await program.methods
-    .createSolLifafa(
-      new anchor.BN(id),
-      new anchor.BN(amount),
-      new anchor.BN(timeLimit),
-      new anchor.BN(maxClaims),
-      ownerName,
-      desc
-    )
-    .accounts({
-      lifafa: lifafaState,
-      signer: provider.wallet.publicKey,
-      systemProgram: web3.SystemProgram.programId,
-    })
-    .signers([wallet])
-    .rpc();
-  await confirmTransaction(provider.connection, txHash);
-}
-
-export async function claimLifafa(
-  program: anchor.Program<Lifafa>,
-  provider: anchor.AnchorProvider,
-  wallet: web3.Keypair,
-  id: number,
-  lifafaState: web3.PublicKey
-) {
-  console.log("\nClaiming Lifafa");
-  const txHash = await program.methods
-    .claimSolLifafa(new anchor.BN(id))
-    .accounts({
-      lifafa: lifafaState,
-      signer: provider.wallet.publicKey,
-      systemProgram: web3.SystemProgram.programId,
-    })
-    .signers([wallet])
-    .rpc();
-  await confirmTransaction(provider.connection, txHash);
-}
-
-export async function deleteLifafa(
-  program: anchor.Program<Lifafa>,
-  provider: anchor.AnchorProvider,
-  wallet: web3.Keypair,
-  id: number,
-  lifafaState: web3.PublicKey
-) {
-  console.log("\nDelete Lifafa");
-  const txHash = await program.methods
-    .deleteSolLifafa(new anchor.BN(id))
-    .accounts({
-      lifafa: lifafaState,
-      signer: provider.wallet.publicKey,
-    })
-    .signers([wallet])
-    .rpc();
-  await confirmTransaction(provider.connection, txHash);
-}
 
 export function generateLifafaId(): number {
   return Math.floor(Math.random() * 10000000);
@@ -160,7 +90,8 @@ export async function createSplLifafa(
       new anchor.BN(testData.timeLimit),
       new anchor.BN(testData.maxClaims),
       testData.ownerName,
-      testData.desc
+      testData.desc,
+      testData.claimMode
     )
     .accounts({
       mint: mint,
@@ -358,6 +289,13 @@ export interface TestInputData {
   ownerName: string;
   desc: string;
   amount: number;
+  claimMode: ClaimMode;
+}
+
+export enum ClaimMode {
+  Random = 0,
+  Equal = 1,
+  None = 2
 }
 
 export function getTestData(): TestInputData {
@@ -368,5 +306,6 @@ export function getTestData(): TestInputData {
     ownerName: "jovian",
     desc: "Gift for winning the hackathon",
     amount: 100 * 1e6,
+    claimMode: ClaimMode.Random
   };
 }
