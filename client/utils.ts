@@ -190,6 +190,28 @@ export async function claimSplLifafa(
   await confirmTransaction(provider.connection, txHash);
 }
 
+export async function deleteSplLifafa(
+  provider: anchor.AnchorProvider,
+  program: anchor.Program<Lifafa>,
+  wallet: web3.Keypair,
+  id: number,
+  mint: PublicKey,
+  vault: PublicKey
+) {
+  console.log("\Delete Lifafa");
+  const txHash = await program.methods
+    .deleteSplLifafa(new anchor.BN(id))
+    .accounts({
+      mint: mint,
+      vault: vault,
+      signer: provider.wallet.publicKey,
+      tokenProgram: TOKEN_PROGRAM_ID,
+    })
+    .signers([wallet])
+    .rpc();
+  await confirmTransaction(provider.connection, txHash);
+}
+
 export async function getTokenBalance(
   provider: anchor.AnchorProvider,
   tokenAccount: anchor.web3.PublicKey
@@ -236,7 +258,7 @@ export async function getRequiredATA(
       true
     )
   ).address;
-  await getATABalances(provider, ata, vault, true);
+  
   return [mint, ata, vault];
 }
 
