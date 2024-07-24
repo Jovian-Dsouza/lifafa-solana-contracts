@@ -20,6 +20,11 @@ pub fn create_spl_lifafa(
     owner_name: String,
     desc: String,
 ) -> Result<()>  {
+    // Check if the Lifafa account is already initialized
+    require!(
+        ctx.accounts.lifafa.owner == Pubkey::default(),
+        LifafaError::LifafaAlreadyExists
+    );
     require!(
         owner_name.len() as u16 <= MAX_OWNER_NAME,
         LifafaError::OwnerNameTooLong

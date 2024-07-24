@@ -22,4 +22,7 @@ pub enum LifafaError {
 
     #[msg("Description too long")]
     DescriptionTooLong,
+
+    #[msg("Lifafa Already Exists")]
+    LifafaAlreadyExists,
 }
