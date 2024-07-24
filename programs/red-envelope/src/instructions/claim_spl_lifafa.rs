@@ -38,7 +38,7 @@ pub fn claim_spl_lifafa(ctx: Context<ClaimSplLifafa>, _id: u64) -> Result<()>  {
             pseudo_random_number % ctx.accounts.vault.amount
         }
         ClaimMode::Equal => {
-            ctx.accounts.vault.amount / ctx.accounts.lifafa.max_claims
+            ctx.accounts.lifafa.amount / ctx.accounts.lifafa.max_claims
         }
     };
     
