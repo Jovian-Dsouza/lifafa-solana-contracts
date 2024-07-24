@@ -15,6 +15,7 @@ import {
   deleteSplLifafa,
   getLifafaData,
   createTestWallet,
+  ClaimMode,
 } from "../client/utils";
 
 describe("Test Red Envelope", () => {
@@ -77,10 +78,9 @@ describe("Test Red Envelope", () => {
       error && error.error.errorCode.code === "LifafaAlreadyExists",
       "Expected error when creating lifafa with duplicate ID"
     );
-
   });
 
-  it("Create & Claim spl lifafa", async () => {
+  it("Create & Claim spl lifafa (Random)", async () => {
     const testData = getTestData();
 
     const [lifafaPDA] = findLifafaState(program.programId, testData.id);
@@ -160,6 +160,71 @@ describe("Test Red Envelope", () => {
     );
   });
 
+  it("Create & Claim spl lifafa (Equal)", async () => {
+    let testData = getTestData();
+    testData.claimMode = ClaimMode.Equal;
+
+    const [lifafaPDA] = findLifafaState(program.programId, testData.id);
+    const [mint, ata, vault] = await getRequiredATA(
+      provider,
+      wallet,
+      lifafaPDA
+    );
+    await createSplLifafa(provider, program, wallet, testData, mint, vault);
+    const [ataCreateBal, vaultCreateBal] = await getATABalances(
+      provider,
+      ata,
+      vault,
+      true
+    );
+    await claimSplLifafa(provider, program, wallet, testData.id, mint, vault);
+    const [ataClaimBal, vaultClaimBal] = await getATABalances(
+      provider,
+      ata,
+      vault,
+      true
+    );
+
+    const claimBal = ataClaimBal.sub(ataCreateBal).toNumber();
+    console.log("Claim Balance: ", claimBal.toString());
+    assert(
+      claimBal === testData.amount / testData.maxClaims,
+      "Claimed balance should be equally devided"
+    );
+
+    // Different account should be able to claim
+    const [wallet2, ata2] = await createTestWallet(provider, wallet, mint);
+    await claimSplLifafa(provider, program, wallet2, testData.id, mint, vault);
+    const claimed2 = await getTokenBalance(provider, ata2);
+    console.log("Second wallet claimed", claimed2.toNumber());
+    assert(
+      claimed2.toNumber() === testData.amount / testData.maxClaims,
+      "Claimed balance should be equally devided for second user"
+    );
+  });
+
+  it("Create spl lifafa for claim mode (None) should fail", async () => {
+    let testData = getTestData();
+    testData.claimMode = ClaimMode.None;
+
+    const [lifafaPDA] = findLifafaState(program.programId, testData.id);
+    const [mint, ata, vault] = await getRequiredATA(
+      provider,
+      wallet,
+      lifafaPDA
+    );
+    let error = null;
+    try {
+      await createSplLifafa(provider, program, wallet, testData, mint, vault);
+    } catch (err) {
+      error = err;
+    }
+    assert(
+      error && error.error.errorCode.code === "InvalidClaimMode",
+      "Expected error when creating lifafa with invalid claim mode"
+    );
+  });
+
   it("create and delete SPL tokens", async () => {
     const testData = getTestData();
 
@@ -217,7 +282,7 @@ describe("Test Red Envelope", () => {
     );
 
     const [wallet2, ata2] = await createTestWallet(provider, wallet, mint);
-    
+
     // Attempt to read vault balance & expect it to fail
     let error = null;
     try {
@@ -232,10 +297,6 @@ describe("Test Red Envelope", () => {
     } catch (err) {
       error = err;
     }
-    assert(
-      error !== null,
-      "Expected only owner can delete the vault"
-    );
+    assert(error !== null, "Expected only owner can delete the vault");
   });
-
 });
