@@ -14,19 +14,22 @@ import {
   toSol,
   confirmTransaction,
   createTokenMint,
-  createTokenAccount,
   // transferSPLTokens
   getTokenBalance,
   createSplLifafa,
+  getRequiredATA,
+  claimSplLifafa,
+  getATABalances,
+  getTestData,
 } from "../client/utils";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   getAssociatedTokenAddressSync,
   getOrCreateAssociatedTokenAccount,
   mintTo,
-  TOKEN_2022_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
+import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 
 describe("Test Red Envelope", () => {
   // Load wallet from the secret key path
@@ -42,6 +45,9 @@ describe("Test Red Envelope", () => {
     anchor.setProvider(provider);
     program = anchor.workspace.Lifafa as anchor.Program<Lifafa>;
     wallet2 = web3.Keypair.generate();
+
+    // const privateKey = bs58.encode(wallet.secretKey);
+    // console.log(`Wallet PrivateKey:`, privateKey);
   });
 
   // it("create sol lifafa", async () => {
@@ -56,6 +62,19 @@ describe("Test Red Envelope", () => {
   //   const [lifafaState] = findLifafaState(program.programId, id);
 
   //   await createLifafa(
+  //       program,
+  //       provider,
+  //       wallet,
+  //       id,
+  //       amount,
+  //       timeLimit,
+  //       maxClaims,
+  //       ownerName,
+  //       desc,
+  //       lifafaState
+  //     );
+
+  //     await createLifafa(
   //       program,
   //       provider,
   //       wallet,
@@ -135,66 +154,26 @@ describe("Test Red Envelope", () => {
   //   assert(finalLifafaBalance < initialLifafaBalance, "Lifafa balance should decrease after being claimed");
   // });
 
-  it("transfers SPL tokens", async () => {
-    const id = generateLifafaId();
-    const timeLimit = 1000;
-    const maxClaims = 1;
-    const ownerName = "jovian";
-    const desc = "Gift";
-    const giftAmount = 100;
+  it("create, claim, delete SPL tokens", async () => {
+    const testData = getTestData()
 
-    const [lifafaPDA] = findLifafaState(program.programId, id);
-
-    console.log(
-      `\nCreating Lifafa for claiming test, amount = ${giftAmount}, id = ${id}`
-    );
-
-    const mintAmount = 100000000
-    const amount = new BN(web3.LAMPORTS_PER_SOL * 0.1); // Amount to transfer
-    const mint = await createTokenMint(provider, wallet);
-    console.log("Token mint: ", mint.toString());
-
-    const ata = (await getOrCreateAssociatedTokenAccount(
-      provider.connection,
+    const [lifafaPDA] = findLifafaState(program.programId, testData.id);
+    const [mint, ata, vault] = await getRequiredATA(
+      provider,
       wallet,
-      mint,
-      wallet.publicKey,
-      false,
-    )).address;
-    await mintTo(
-      provider.connection,
-      wallet, //fee payer
-      mint,
-      ata,
-      wallet, //mint authority
-      mintAmount
-    );
-
-    const vault = (
-      await getOrCreateAssociatedTokenAccount(
-        provider.connection,
-        wallet,
-        mint,
-        lifafaPDA,
-        true
-      )
-    ).address;
-    console.log("From ata account: ", ata.toString());
-    console.log("Vault account: ", vault.toString());
-    console.log(
-      `From account balance: ${await getTokenBalance(provider, ata)}`
+      lifafaPDA
     );
     console.log(
-      `To account balance: ${await getTokenBalance(provider, vault)}`
+      `\nCreating SPL Lifafa, amount = ${testData.amount}, id = ${testData.id}`
     );
     const txHash = await program.methods
       .createSplLifafa(
-        new anchor.BN(id),
-        new anchor.BN(amount),
-        new anchor.BN(timeLimit),
-        new anchor.BN(maxClaims),
-        ownerName,
-        desc
+        new anchor.BN(testData.id),
+        new anchor.BN(testData.amount),
+        new anchor.BN(testData.timeLimit),
+        new anchor.BN(testData.maxClaims),
+        testData.ownerName,
+        testData.desc
       )
       .accounts({
         mint: mint,
@@ -205,40 +184,14 @@ describe("Test Red Envelope", () => {
       .signers([wallet])
       .rpc();
     await confirmTransaction(provider.connection, txHash);
+    const [ataCreateBal, vaultCreateBal] = await getATABalances(provider, ata, vault, true);
 
-    // const fromBalance = await getTokenBalance(provider, fromTokenAccount);
-    // const toBalance = await getTokenBalance(provider, toTokenAccount);
-
-    console.log(
-      `From account balance: ${await getTokenBalance(provider, ata)}`
-    );
-    console.log(
-      `To account balance: ${await getTokenBalance(provider, vault)}`
-    );
-
-    console.log("\nClaiming Lifafa");
-    const txHash2 = await program.methods
-      .claimSplLifafa(new anchor.BN(id))
-      .accounts({
-        mint: mint,
-        vault: vault,
-        signer: provider.wallet.publicKey,
-        tokenProgram: TOKEN_PROGRAM_ID,
-      })
-      .signers([wallet])
-      .rpc();
-    await confirmTransaction(provider.connection, txHash2);
-
-    console.log(
-      `From account balance: ${await getTokenBalance(provider, ata)}`
-    );
-    console.log(
-      `To account balance: ${await getTokenBalance(provider, vault)}`
-    );
+    await claimSplLifafa(provider, program, wallet, testData.id, mint, vault);
+    await getATABalances(provider, ata, vault, true);
 
     console.log("\nDelete Lifafa");
     const txHash3 = await program.methods
-      .deleteSplLifafa(new anchor.BN(id))
+      .deleteSplLifafa(new anchor.BN(testData.id))
       .accounts({
         mint: mint,
         vault: vault,
@@ -248,7 +201,7 @@ describe("Test Red Envelope", () => {
       .signers([wallet])
       .rpc();
     await confirmTransaction(provider.connection, txHash3);
-    
+
     console.log(
       `From account balance: ${await getTokenBalance(provider, ata)}`
     );

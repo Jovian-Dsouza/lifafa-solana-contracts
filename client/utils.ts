@@ -137,30 +137,6 @@ export async function createTokenMint(
   return mint;
 }
 
-export async function createTokenAccount(
-  provider: anchor.AnchorProvider,
-  mint: anchor.web3.PublicKey,
-  owner: anchor.web3.PublicKey,
-  wallet: web3.Keypair,
-  amount: anchor.BN
-) {
-  const tokenAccount = await getOrCreateAssociatedTokenAccount(
-    provider.connection,
-    wallet, //fee payer
-    mint,
-    owner
-  );
-  await mintTo(
-    provider.connection,
-    wallet, //fee payer
-    mint,
-    tokenAccount.address,
-    wallet, //mint authority
-    amount
-  );
-  return tokenAccount.address;
-}
-
 export async function createSplLifafa(
   program: anchor.Program<Lifafa>,
   provider: anchor.AnchorProvider,
@@ -198,25 +174,27 @@ export async function createSplLifafa(
   await confirmTransaction(provider.connection, txHash);
 }
 
-// export async function transferSPLTokens(
-//   program,
-//   provider,
-//   wallet,
-//   fromTokenAccount,
-//   toTokenAccount,
-//   amount
-// ) {
-//   const tx = await program.rpc.transferSplTokens(amount, {
-//     accounts: {
-// from: fromTokenAccount,
-// to: toTokenAccount,
-// authority: wallet.publicKey,
-// tokenProgram: TOKEN_PROGRAM_ID,
-//     },
-//     signers: [wallet],
-//   });
-//   await confirmTransaction(provider.connection, tx);
-// }
+export async function claimSplLifafa(
+  provider: anchor.AnchorProvider,
+  program: anchor.Program<Lifafa>,
+  wallet: web3.Keypair,
+  id: number,
+  mint: PublicKey,
+  vault: PublicKey
+) {
+  console.log("\nClaiming Lifafa");
+  const txHash = await program.methods
+    .claimSplLifafa(new anchor.BN(id))
+    .accounts({
+      mint: mint,
+      vault: vault,
+      signer: provider.wallet.publicKey,
+      tokenProgram: TOKEN_PROGRAM_ID,
+    })
+    .signers([wallet])
+    .rpc();
+  await confirmTransaction(provider.connection, txHash);
+}
 
 export async function getTokenBalance(
   provider: anchor.AnchorProvider,
@@ -225,5 +203,98 @@ export async function getTokenBalance(
   const accountInfo = await provider.connection.getTokenAccountBalance(
     new PublicKey(tokenAccount)
   );
-  return accountInfo.value.amount;
+  return new BN(accountInfo.value.amount);
+}
+
+export async function getRequiredATA(
+  provider: anchor.AnchorProvider,
+  wallet: anchor.web3.Keypair,
+  lifafaPDA: anchor.web3.PublicKey
+) {
+  const mintAmount = 1000 * 1e6;
+  const mint = await createTokenMint(provider, wallet);
+  console.log("Token mint: ", mint.toString());
+
+  const ata = (
+    await getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      wallet,
+      mint,
+      wallet.publicKey,
+      false
+    )
+  ).address;
+  await mintTo(
+    provider.connection,
+    wallet, //fee payer
+    mint,
+    ata,
+    wallet, //mint authority
+    mintAmount
+  );
+
+  const vault = (
+    await getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      wallet,
+      mint,
+      lifafaPDA,
+      true
+    )
+  ).address;
+  await getATABalances(provider, ata, vault, true);
+  return [mint, ata, vault];
+}
+
+export async function getATABalances(
+  provider: anchor.AnchorProvider,
+  ata: anchor.web3.PublicKey,
+  vault: anchor.web3.PublicKey,
+  print: boolean = false
+) {
+  const ataBal = await getTokenBalance(provider, ata);
+  const vaultBal = await getTokenBalance(provider, vault);
+  if (print) {
+    console.log(`token account balance: ${ataBal.toString()}`);
+    console.log(`vault account balance: ${vaultBal.toString()}`);
+  }
+  return [ataBal, vaultBal];
+}
+
+export interface LifafaData {
+  id: BN;
+  creationTime: BN;
+  timeLimit: BN;
+  owner: PublicKey;
+  ownerName: string;
+  claims: BN;
+  maxClaims: BN;
+  mintOfTokenBeingSent: PublicKey;
+  amount: BN;
+  desc: string;
+}
+
+export async function getLifafaData(program: anchor.Program<Lifafa>, id: number) {
+  const [lifafaPDA] = findLifafaState(program.programId, id);
+  return (await program.account.lifafa.fetch(lifafaPDA)) as LifafaData;
+}
+
+export interface TestInputData {
+  id: number;
+  timeLimit: number;
+  maxClaims: number;
+  ownerName: string;
+  desc: string;
+  amount: number;
+}
+
+export function getTestData(): TestInputData {
+  return {
+    id: generateLifafaId(),
+    timeLimit: 1000,
+    maxClaims: 5,
+    ownerName: "jovian",
+    desc: "Gift for winning the hackathon",
+    amount: 100 * 1e6,
+  }
 }
