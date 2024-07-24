@@ -138,36 +138,30 @@ export async function createTokenMint(
 }
 
 export async function createSplLifafa(
-  program: anchor.Program<Lifafa>,
   provider: anchor.AnchorProvider,
+  program: anchor.Program<Lifafa>,
   wallet: web3.Keypair,
-  id: number,
-  amount: number,
-  timeLimit: number,
-  maxClaims: number,
-  ownerName: string,
-  desc: string,
-  lifafaState: web3.PublicKey,
-  fromTokenAccount: web3.PublicKey,
-  toTokenAccount: web3.PublicKey
+  testData: TestInputData,
+  mint: PublicKey,
+  vault: PublicKey
 ) {
-  console.log(`\nCreate Lifafa, amount = ${amount}, id = ${id}`);
+  console.log(
+    `\nCreate Lifafa, amount = ${testData.amount}, id = ${testData.id}`
+  );
   const txHash = await program.methods
     .createSplLifafa(
-      new anchor.BN(id),
-      new anchor.BN(amount),
-      new anchor.BN(timeLimit),
-      maxClaims,
-      ownerName,
-      desc
+      new anchor.BN(testData.id),
+      new anchor.BN(testData.amount),
+      new anchor.BN(testData.timeLimit),
+      new anchor.BN(testData.maxClaims),
+      testData.ownerName,
+      testData.desc
     )
     .accounts({
-      lifafa: lifafaState,
+      mint: mint,
+      vault: vault,
       signer: provider.wallet.publicKey,
-      sourceTokenAccount: fromTokenAccount,
-      destinationTokenAccount: toTokenAccount,
       tokenProgram: TOKEN_PROGRAM_ID,
-      systemProgram: web3.SystemProgram.programId,
     })
     .signers([wallet])
     .rpc();

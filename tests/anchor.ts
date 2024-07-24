@@ -155,7 +155,7 @@ describe("Test Red Envelope", () => {
   // });
 
   it("create, claim, delete SPL tokens", async () => {
-    const testData = getTestData()
+    const testData = getTestData();
 
     const [lifafaPDA] = findLifafaState(program.programId, testData.id);
     const [mint, ata, vault] = await getRequiredATA(
@@ -166,25 +166,13 @@ describe("Test Red Envelope", () => {
     console.log(
       `\nCreating SPL Lifafa, amount = ${testData.amount}, id = ${testData.id}`
     );
-    const txHash = await program.methods
-      .createSplLifafa(
-        new anchor.BN(testData.id),
-        new anchor.BN(testData.amount),
-        new anchor.BN(testData.timeLimit),
-        new anchor.BN(testData.maxClaims),
-        testData.ownerName,
-        testData.desc
-      )
-      .accounts({
-        mint: mint,
-        vault: vault,
-        signer: provider.wallet.publicKey,
-        tokenProgram: TOKEN_PROGRAM_ID,
-      })
-      .signers([wallet])
-      .rpc();
-    await confirmTransaction(provider.connection, txHash);
-    const [ataCreateBal, vaultCreateBal] = await getATABalances(provider, ata, vault, true);
+    await createSplLifafa(provider, program, wallet, testData, mint, vault);
+    const [ataCreateBal, vaultCreateBal] = await getATABalances(
+      provider,
+      ata,
+      vault,
+      true
+    );
 
     await claimSplLifafa(provider, program, wallet, testData.id, mint, vault);
     await getATABalances(provider, ata, vault, true);
