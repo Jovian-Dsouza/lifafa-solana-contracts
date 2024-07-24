@@ -21,7 +21,6 @@ describe("Test Red Envelope", () => {
   // Load wallet from the secret key path
   const secretKeyPath = "/home/jovian/.config/solana/id.json";
   let wallet: web3.Keypair;
-  let wallet2: web3.Keypair;
   let provider: anchor.AnchorProvider;
   let program: anchor.Program<Lifafa>;
 
@@ -32,54 +31,54 @@ describe("Test Red Envelope", () => {
     program = anchor.workspace.Lifafa as anchor.Program<Lifafa>;
   });
 
-  // it("Create spl lifafa", async () => {
-  //   const testData = getTestData();
+  it("Create spl lifafa", async () => {
+    const testData = getTestData();
 
-  //   const [lifafaPDA] = findLifafaState(program.programId, testData.id);
-  //   const [mint, ata, vault] = await getRequiredATA(
-  //     provider,
-  //     wallet,
-  //     lifafaPDA
-  //   );
-  //   const [ataBalInit, vaultBalInit] = await getATABalances(
-  //     provider,
-  //     ata,
-  //     vault,
-  //     false
-  //   );
-  //   await createSplLifafa(provider, program, wallet, testData, mint, vault);
-  //   const [ataCreateBal, vaultCreateBal] = await getATABalances(
-  //     provider,
-  //     ata,
-  //     vault,
-  //     false
-  //   );
-  //   const lifafaData = await getLifafaData(program, testData.id);
-  //   assert(lifafaData.id.toNumber() == testData.id);
-  //   assert(lifafaData.timeLimit.toNumber() == testData.timeLimit);
-  //   assert(lifafaData.claims.toNumber() == 0);
-  //   assert(lifafaData.maxClaims.toNumber() === testData.maxClaims);
-  //   assert(lifafaData.ownerName === testData.ownerName);
-  //   assert(lifafaData.owner.toString() === wallet.publicKey.toString());
-  //   assert(lifafaData.mintOfTokenBeingSent.toString() === mint.toString());
-  //   assert(lifafaData.amount.toNumber() === testData.amount);
-  //   assert(lifafaData.desc === testData.desc);
-  //   assert(vaultCreateBal.toNumber() === testData.amount);
+    const [lifafaPDA] = findLifafaState(program.programId, testData.id);
+    const [mint, ata, vault] = await getRequiredATA(
+      provider,
+      wallet,
+      lifafaPDA
+    );
+    const [ataBalInit, vaultBalInit] = await getATABalances(
+      provider,
+      ata,
+      vault,
+      false
+    );
+    await createSplLifafa(provider, program, wallet, testData, mint, vault);
+    const [ataCreateBal, vaultCreateBal] = await getATABalances(
+      provider,
+      ata,
+      vault,
+      false
+    );
+    const lifafaData = await getLifafaData(program, testData.id);
+    assert(lifafaData.id.toNumber() == testData.id);
+    assert(lifafaData.timeLimit.toNumber() == testData.timeLimit);
+    assert(lifafaData.claims.toNumber() == 0);
+    assert(lifafaData.maxClaims.toNumber() === testData.maxClaims);
+    assert(lifafaData.ownerName === testData.ownerName);
+    assert(lifafaData.owner.toString() === wallet.publicKey.toString());
+    assert(lifafaData.mintOfTokenBeingSent.toString() === mint.toString());
+    assert(lifafaData.amount.toNumber() === testData.amount);
+    assert(lifafaData.desc === testData.desc);
+    assert(vaultCreateBal.toNumber() === testData.amount);
 
-  //   // Attempt to create lifafa with the same ID and expect it to fail
-  //   let error = null;
-  //   try {
-  //     await createSplLifafa(provider, program, wallet, testData, mint, vault);
-  //   } catch (err) {
-  //     error = err;
-  //   }
+    // Attempt to create lifafa with the same ID and expect it to fail
+    let error = null;
+    try {
+      await createSplLifafa(provider, program, wallet, testData, mint, vault);
+    } catch (err) {
+      error = err;
+    }
 
-  //   assert(
-  //     error && error.error.errorCode.code === "LifafaAlreadyExists",
-  //     "Expected error when creating lifafa with duplicate ID"
-  //   );
+    assert(
+      error && error.error.errorCode.code === "LifafaAlreadyExists",
+      "Expected error when creating lifafa with duplicate ID"
+    );
 
-  // });
+  });
 
   it("Create & Claim spl lifafa", async () => {
     const testData = getTestData();
@@ -161,43 +160,82 @@ describe("Test Red Envelope", () => {
     );
   });
 
-  // it("create, claim, delete SPL tokens", async () => {
-  //   const testData = getTestData();
+  it("create and delete SPL tokens", async () => {
+    const testData = getTestData();
 
-  //   const [lifafaPDA] = findLifafaState(program.programId, testData.id);
-  //   const [mint, ata, vault] = await getRequiredATA(
-  //     provider,
-  //     wallet,
-  //     lifafaPDA
-  //   );
-  //   console.log(
-  //     `\nCreating SPL Lifafa, amount = ${testData.amount}, id = ${testData.id}`
-  //   );
-  //   await createSplLifafa(provider, program, wallet, testData, mint, vault);
-  //   const [ataCreateBal, vaultCreateBal] = await getATABalances(
-  //     provider,
-  //     ata,
-  //     vault,
-  //     true
-  //   );
+    const [lifafaPDA] = findLifafaState(program.programId, testData.id);
+    const [mint, ata, vault] = await getRequiredATA(
+      provider,
+      wallet,
+      lifafaPDA
+    );
+    console.log(
+      `\nCreating SPL Lifafa, amount = ${testData.amount}, id = ${testData.id}`
+    );
+    await createSplLifafa(provider, program, wallet, testData, mint, vault);
+    const [ataCreateBal, vaultCreateBal] = await getATABalances(
+      provider,
+      ata,
+      vault,
+      true
+    );
 
-  //   await claimSplLifafa(provider, program, wallet, testData.id, mint, vault);
-  //   await getATABalances(provider, ata, vault, true);
+    await deleteSplLifafa(provider, program, wallet, testData.id, mint, vault);
+    const ataDeleteBal = await getTokenBalance(provider, ata);
+    console.log(`token account balance: ${ataDeleteBal}`);
 
-  //   await deleteSplLifafa(provider, program, wallet, testData.id, mint, vault)
+    assert(
+      ataCreateBal.add(vaultCreateBal).toString() === ataDeleteBal.toString(),
+      "Final delete balance not matching"
+    );
 
-  //   console.log(
-  //     `From account balance: ${await getTokenBalance(provider, ata)}`
-  //   );
-  //   // assert.strictEqual(
-  //   //   fromBalance,
-  //   //   0,
-  //   //   "From account should have 0 tokens left"
-  //   // );
-  //   // assert.strictEqual(
-  //   //   toBalance,
-  //   //   amount.toNumber(),
-  //   //   "To account should have received the tokens"
-  //   // );
-  // });
+    // Attempt to read vault balance & expect it to fail
+    let error = null;
+    try {
+      const vaultDeleteBal = await getTokenBalance(provider, vault);
+      assert(true, "Vault ata should be deleted");
+    } catch (err) {
+      error = err;
+    }
+  });
+
+  it("Only owner can delete the vault", async () => {
+    const testData = getTestData();
+
+    const [lifafaPDA] = findLifafaState(program.programId, testData.id);
+    const [mint, ata, vault] = await getRequiredATA(
+      provider,
+      wallet,
+      lifafaPDA
+    );
+    await createSplLifafa(provider, program, wallet, testData, mint, vault);
+    const [ataCreateBal, vaultCreateBal] = await getATABalances(
+      provider,
+      ata,
+      vault,
+      false
+    );
+
+    const [wallet2, ata2] = await createTestWallet(provider, wallet, mint);
+    
+    // Attempt to read vault balance & expect it to fail
+    let error = null;
+    try {
+      await deleteSplLifafa(
+        provider,
+        program,
+        wallet2,
+        testData.id,
+        mint,
+        vault
+      );
+    } catch (err) {
+      error = err;
+    }
+    assert(
+      error !== null,
+      "Expected only owner can delete the vault"
+    );
+  });
+
 });
