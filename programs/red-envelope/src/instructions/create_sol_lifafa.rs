@@ -1,5 +1,5 @@
 pub use crate::errors::LifafaError;
-use crate::{ MAX_OWNER_NAME, MAX_DESC, LIFAFA_SEED, Lifafa};
+use crate::{ MAX_OWNER_NAME, MAX_DESC, LIFAFA_SEED, Lifafa, ClaimMode};
 
 use anchor_lang::prelude::*;
 use anchor_lang::system_program;
@@ -14,6 +14,7 @@ pub fn create_sol_lifafa(
     max_claims: u64,
     owner_name: String,
     desc: String,
+    claim_mode: ClaimMode, 
 ) -> Result<()>  {
     require!(
         owner_name.len() as u16 <= MAX_OWNER_NAME,
@@ -32,6 +33,7 @@ pub fn create_sol_lifafa(
     ctx.accounts.lifafa.max_claims = max_claims;
     ctx.accounts.lifafa.amount = amount;
     ctx.accounts.lifafa.desc = desc;
+    ctx.accounts.lifafa.claim_mode = claim_mode;
 
     let cpi_context = CpiContext::new(
         ctx.accounts.system_program.to_account_info(),

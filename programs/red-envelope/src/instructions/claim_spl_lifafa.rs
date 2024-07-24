@@ -1,5 +1,5 @@
 pub use crate::errors::LifafaError;
-use crate::{LIFAFA_SEED, Lifafa, UserClaim};
+use crate::{LIFAFA_SEED, Lifafa, UserClaim, ClaimMode};
 
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::pubkey::Pubkey;
@@ -30,11 +30,17 @@ pub fn claim_spl_lifafa(ctx: Context<ClaimSplLifafa>, _id: u64) -> Result<()>  {
         return err!(LifafaError::AlreadyClaimed);
     }
 
-    // TODO use Oracle for Security - however cost of 0.002 SOL will be added
-    // Pseudo random number - Uses timestamp, hash and xorshift
-    let hash = hash(&clock.slot.to_be_bytes());
-    let pseudo_random_number = xor_shift(u64::from_be_bytes(hash.to_bytes()[..8].try_into().unwrap()));
-    let claim_amount =  pseudo_random_number % ctx.accounts.vault.amount;
+    // Calculate claim amount based on the claim mode
+    let claim_amount = match ctx.accounts.lifafa.claim_mode {
+        ClaimMode::Random => {
+            let hash = hash(&clock.slot.to_be_bytes());
+            let pseudo_random_number = xor_shift(u64::from_be_bytes(hash.to_bytes()[..8].try_into().unwrap()));
+            pseudo_random_number % ctx.accounts.vault.amount
+        }
+        ClaimMode::Equal => {
+            ctx.accounts.vault.amount / ctx.accounts.lifafa.max_claims
+        }
+    };
     
     let transfer_accounts = TransferChecked {
         from: ctx.accounts.vault.to_account_info(),

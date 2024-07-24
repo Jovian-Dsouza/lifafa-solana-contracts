@@ -1,6 +1,11 @@
 use anchor_lang::prelude::*;
 use crate::{ MAX_OWNER_NAME, MAX_DESC};
 
+#[derive(InitSpace, AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq, Debug)]
+pub enum ClaimMode {
+    Random,
+    Equal,
+}
 
 #[account]
 #[derive(InitSpace)]
@@ -17,7 +22,8 @@ pub struct Lifafa {
     pub amount: u64,
     #[max_len(MAX_DESC)]
     pub desc: String,
-    pub bump: u8
+    pub bump: u8,
+    pub claim_mode: ClaimMode,
 }
 
 #[account]

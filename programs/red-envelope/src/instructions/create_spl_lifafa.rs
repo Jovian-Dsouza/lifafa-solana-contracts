@@ -1,5 +1,5 @@
 pub use crate::errors::LifafaError;
-use crate::{ MAX_OWNER_NAME, MAX_DESC, LIFAFA_SEED, Lifafa};
+use crate::{ MAX_OWNER_NAME, MAX_DESC, LIFAFA_SEED, Lifafa, ClaimMode};
 
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::pubkey::Pubkey;
@@ -19,6 +19,7 @@ pub fn create_spl_lifafa(
     max_claims: u64,
     owner_name: String,
     desc: String,
+    claim_mode: ClaimMode,
 ) -> Result<()>  {
     // Check if the Lifafa account is already initialized
     require!(
@@ -43,6 +44,7 @@ pub fn create_spl_lifafa(
     ctx.accounts.lifafa.desc = desc;
     ctx.accounts.lifafa.bump = ctx.bumps.lifafa;
     ctx.accounts.lifafa.mint_of_token_being_sent = ctx.accounts.mint.key();
+    ctx.accounts.lifafa.claim_mode = claim_mode;
 
     let transfer_accounts = TransferChecked {
         from: ctx.accounts.ata.to_account_info(),
